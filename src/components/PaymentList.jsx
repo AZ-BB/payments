@@ -26,7 +26,7 @@ function PaymentList({ payments, loading, filters, onFiltersChange, onDelete, on
 
   const formatDate = (dateString) => {
     const date = new Date(dateString)
-    return date.toLocaleDateString('ar-SA')
+    return date.toLocaleDateString('en-US')
   }
 
   const formatNumber = (amount) => {
