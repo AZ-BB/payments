@@ -30,7 +30,7 @@ function PaymentList({ payments, loading, filters, onFiltersChange, onDelete, on
   }
 
   const formatNumber = (amount) => {
-    return new Intl.NumberFormat('ar-SA', {
+    return new Intl.NumberFormat('en-US', {
       minimumFractionDigits: 2,
       maximumFractionDigits: 2
     }).format(amount)
