@@ -43,6 +43,11 @@
   background: #ffffff;
 }
 
+.form-group input[type="text"][name="total"] {
+  direction: ltr;
+  text-align: right;
+}
+
 .form-group input:focus,
 .form-group textarea:focus {
   outline: none;

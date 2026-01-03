@@ -26,7 +26,11 @@ function PaymentList({ payments, loading, filters, onFiltersChange, onDelete, on
 
   const formatDate = (dateString) => {
     const date = new Date(dateString)
-    return date.toLocaleDateString('en-US')
+    const day = date.getDate()
+    const monthNames = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec']
+    const month = monthNames[date.getMonth()]
+    const year = date.getFullYear()
+    return `${day}-${month}-${year}`
   }
 
   const formatNumber = (amount) => {
@@ -35,6 +39,9 @@ function PaymentList({ payments, loading, filters, onFiltersChange, onDelete, on
       maximumFractionDigits: 2
     }).format(amount)
   }
+
+  // Calculate total of all displayed payments
+  const totalAmount = payments.reduce((sum, payment) => sum + (parseFloat(payment.total) || 0), 0)
 
   if (loading) {
     return (
@@ -47,7 +54,13 @@ function PaymentList({ payments, loading, filters, onFiltersChange, onDelete, on
   return (
     <div className="payment-list-container">
       <div className="list-header">
-        <h2>Records ({payments.length})</h2>
+        <div className="header-title-section">
+          <h2>سجل المدفوعات ({payments.length})</h2>
+          <div className="total-summary">
+            <span className="total-label">الإجمالي:</span>
+            <span className="total-value">{formatNumber(totalAmount)}</span>
+          </div>
+        </div>
         <div className="header-actions">
           <button 
             className="btn btn-filter"
@@ -144,7 +157,7 @@ function PaymentList({ payments, loading, filters, onFiltersChange, onDelete, on
             <tbody>
               {payments.map(payment => (
                 <tr key={payment.id}>
-                  <td>{formatDate(payment.date)}</td>
+                  <td className="date-cell">{formatDate(payment.date)}</td>
                   <td>{payment.beneficiary}</td>
                   <td>{payment.account}</td>
                   <td>{payment.project}</td>

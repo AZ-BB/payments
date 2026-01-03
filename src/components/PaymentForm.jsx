@@ -12,6 +12,25 @@ function PaymentForm({ onSubmit, onCancel, uniqueBeneficiaries = [], uniqueAccou
     total: ''
   })
 
+  const formatNumberWithCommas = (value) => {
+    if (!value && value !== 0) return ''
+    // Remove all non-digit characters except decimal point
+    const numericValue = String(value).replace(/[^\d.]/g, '')
+    
+    if (!numericValue) return ''
+    
+    // Split by decimal point
+    const parts = numericValue.split('.')
+    const integerPart = parts[0]
+    const decimalPart = parts[1]
+    
+    // Format integer part with commas
+    const formattedInteger = integerPart.replace(/\B(?=(\d{3})+(?!\d))/g, ',')
+    
+    // Combine with decimal part if exists
+    return decimalPart !== undefined ? `${formattedInteger}.${decimalPart}` : formattedInteger
+  }
+
   useEffect(() => {
     if (initialData) {
       setFormData({
@@ -20,7 +39,7 @@ function PaymentForm({ onSubmit, onCancel, uniqueBeneficiaries = [], uniqueAccou
         account: initialData.account || '',
         project: initialData.project || '',
         description: initialData.description || '',
-        total: initialData.total || ''
+        total: formatNumberWithCommas(initialData.total)
       })
     } else {
       setFormData({
@@ -38,10 +57,21 @@ function PaymentForm({ onSubmit, onCancel, uniqueBeneficiaries = [], uniqueAccou
 
   const handleChange = (e) => {
     const { name, value } = e.target
-    setFormData(prev => ({
-      ...prev,
-      [name]: value
-    }))
+    
+    if (name === 'total') {
+      // Format the total field with commas
+      const formattedValue = formatNumberWithCommas(value)
+      setFormData(prev => ({
+        ...prev,
+        [name]: formattedValue
+      }))
+    } else {
+      setFormData(prev => ({
+        ...prev,
+        [name]: value
+      }))
+    }
+    
     // Clear error when user starts typing
     if (errors[name]) {
       setErrors(prev => ({
@@ -58,7 +88,8 @@ function PaymentForm({ onSubmit, onCancel, uniqueBeneficiaries = [], uniqueAccou
     if (!formData.beneficiary.trim()) newErrors.beneficiary = 'المستفيد مطلوب'
     if (!formData.account.trim()) newErrors.account = 'الحساب مطلوب'
     if (!formData.project.trim()) newErrors.project = 'المشروع مطلوب'
-    if (!formData.total || parseFloat(formData.total) <= 0) {
+    const numericTotal = parseFloat(formData.total.replace(/,/g, ''))
+    if (!formData.total || isNaN(numericTotal) || numericTotal <= 0) {
       newErrors.total = 'الإجمالي يجب أن يكون رقمًا أكبر من الصفر'
     }
 
@@ -71,9 +102,12 @@ function PaymentForm({ onSubmit, onCancel, uniqueBeneficiaries = [], uniqueAccou
     
     if (!validate()) return
 
+    // Remove commas from total before submitting
+    const numericTotal = parseFloat(formData.total.replace(/,/g, ''))
+    
     const submitData = {
       ...formData,
-      total: parseFloat(formData.total)
+      total: numericTotal
     }
 
     onSubmit(submitData)
@@ -174,14 +208,13 @@ function PaymentForm({ onSubmit, onCancel, uniqueBeneficiaries = [], uniqueAccou
         <div className="form-group">
           <label htmlFor="total">الإجمالي *</label>
           <input
-            type="number"
+            type="text"
             id="total"
             name="total"
             value={formData.total}
             onChange={handleChange}
             placeholder="0.00"
-            step="0.01"
-            min="0"
+            inputMode="decimal"
             className={errors.total ? 'error' : ''}
           />
           {errors.total && <span className="error-message">{errors.total}</span>}
