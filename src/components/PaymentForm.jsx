@@ -131,12 +131,12 @@ function PaymentForm({ onSubmit, onCancel, uniqueBeneficiaries = [], uniqueAccou
     <div className="payment-form-overlay" onClick={onCancel}>
       <div className="payment-form-container" onClick={(e) => e.stopPropagation()}>
         <div className="payment-form-header">
-          <h2>{isEditing ? 'تعديل دفعة' : 'إضافة دفعة جديدة'}</h2>
+          <h2>{isEditing ? 'Edit Payment' : 'Add New Payment'}</h2>
           <button 
             type="button" 
             className="close-button"
             onClick={onCancel}
-            aria-label="إغلاق"
+            aria-label="Close"
           >
             ×
           </button>
@@ -232,10 +232,10 @@ function PaymentForm({ onSubmit, onCancel, uniqueBeneficiaries = [], uniqueAccou
 
         <div className="form-actions">
           <button type="button" className="btn btn-secondary" onClick={onCancel}>
-            إلغاء
+            Cancel
           </button>
           <button type="submit" className="btn btn-primary">
-            {isEditing ? 'تحديث' : 'حفظ'}
+            {isEditing ? 'Update' : 'Save'}
           </button>
         </div>
         </form>

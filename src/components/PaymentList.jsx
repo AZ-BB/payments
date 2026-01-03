@@ -111,9 +111,9 @@ function PaymentList({ payments, loading, filters, onFiltersChange, onDelete, on
     <div className="payment-list-container">
       <div className="list-header">
         <div className="header-title-section">
-          <h2>سجل المدفوعات ({payments.length})</h2>
+          <h2>Payments Record ({payments.length})</h2>
           <div className="total-summary">
-            <span className="total-label">الإجمالي:</span>
+            <span className="total-label">Total:</span>
             <span className="total-value">{formatNumber(totalAmount)}</span>
           </div>
         </div>
@@ -121,22 +121,22 @@ function PaymentList({ payments, loading, filters, onFiltersChange, onDelete, on
           <button 
             className="btn btn-export"
             onClick={exportToExcel}
-            title="تصدير إلى Excel"
+            title="Export to Excel"
           >
-            تصدير
+            Export
           </button>
           <button 
             className="btn btn-filter"
             onClick={() => setShowFilters(!showFilters)}
           >
-            {showFilters ? 'إخفاء' : 'تصفية'}
+            {showFilters ? 'Hide' : 'Filter'}
           </button>
           {hasActiveFilters && (
             <button 
               className="btn btn-clear"
               onClick={clearFilters}
             >
-              مسح التصفية
+              Clear Filter
             </button>
           )}
         </div>
@@ -145,7 +145,7 @@ function PaymentList({ payments, loading, filters, onFiltersChange, onDelete, on
       {showFilters && (
         <div className="filters-panel">
           <div className="filter-group date-range-group">
-            <label>من تاريخ</label>
+            <label>From Date</label>
             <input
               type="date"
               value={filters.dateFrom}
@@ -153,7 +153,7 @@ function PaymentList({ payments, loading, filters, onFiltersChange, onDelete, on
             />
           </div>
           <div className="filter-group date-range-group">
-            <label>إلى تاريخ</label>
+            <label>To Date</label>
             <input
               type="date"
               value={filters.dateTo}

@@ -184,13 +184,13 @@ function App() {
   return (
     <div className="app">
       <header className="app-header">
-        <h1>تطبيق تسجيل المدفوعات</h1>
+        <h1>Payments App</h1>
         <div className="header-buttons">
           <button 
             className="btn btn-secondary"
             onClick={() => setShowImport(true)}
           >
-            استيراد من Excel
+            Import from Excel
           </button>
           <button 
             className="btn btn-primary"
@@ -203,7 +203,7 @@ function App() {
               }
             }}
           >
-            {showForm ? 'إلغاء' : 'إضافة دفعة جديدة'}
+            {showForm ? 'Cancel' : 'Add New Record'}
           </button>
         </div>
       </header>

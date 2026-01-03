@@ -361,7 +361,7 @@ function ExcelImporter({ onImport, onCancel }) {
       }).filter(item => item !== null)
 
       if (mappedData.length === 0) {
-        alert('لم يتم العثور على بيانات صحيحة في الملف. تحقق من الأعمدة المطلوبة.')
+        alert('No correct data found in the file. Check the required columns.')
         return
       }
 
@@ -376,7 +376,7 @@ function ExcelImporter({ onImport, onCancel }) {
       }
     } catch (error) {
       console.error('Error reading Excel file:', error)
-      alert('حدث خطأ في قراءة الملف. تأكد من أن الملف بصيغة Excel صحيحة.')
+      alert('Error reading the file. Check that the file is in Excel format.')
     }
   }
 
@@ -387,9 +387,9 @@ function ExcelImporter({ onImport, onCancel }) {
   return (
     <div className="excel-importer-overlay">
       <div className="excel-importer-modal">
-        <h2>استيراد من Excel</h2>
+        <h2>Import from Excel</h2>
         <p className="import-instructions">
-          يجب أن يحتوي الملف على الأعمدة التالية:
+          The file must contain the following columns:
           <br />
           <strong>التاريخ من، التاريخ الى، المستفيد، الحساب، المشروع، وصف (اختياري)، الاجمالي</strong>
         </p>
@@ -402,10 +402,10 @@ function ExcelImporter({ onImport, onCancel }) {
         />
         <div className="import-actions">
           <button className="btn btn-primary" onClick={handleImportClick}>
-            اختر ملف Excel
+            Choose Excel File
           </button>
           <button className="btn btn-secondary" onClick={onCancel}>
-            إلغاء
+            Cancel
           </button>
         </div>
       </div>
