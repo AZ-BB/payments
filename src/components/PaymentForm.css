@@ -1,21 +1,74 @@
+.payment-form-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+  direction: rtl;
+  overflow-y: auto;
+  padding: 1rem;
+}
+
 .payment-form-container {
   background: white;
-  padding: 0;
-  margin: 0;
+  width: 100%;
+  max-width: 900px;
+  max-height: 95vh;
+  margin: auto;
+  display: flex;
+  flex-direction: column;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  border-radius: 4px;
+  overflow: hidden;
+}
+
+.payment-form-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 1.5rem 2rem;
   border-bottom: 1px solid #e0e0e0;
+  background: #fafafa;
+}
+
+.payment-form-header h2 {
+  color: #1a1a1a;
+  margin: 0;
+  font-size: 1.5rem;
+  font-weight: 600;
+}
+
+.close-button {
+  background: none;
+  border: none;
+  font-size: 2rem;
+  color: #757575;
+  cursor: pointer;
+  padding: 0;
+  width: 32px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  transition: all 0.2s ease;
+  line-height: 1;
+}
+
+.close-button:hover {
+  background: #e0e0e0;
+  color: #212121;
 }
 
 .payment-form {
-  padding: 1.5rem 2rem;
-}
-
-.payment-form h2 {
-  color: #1a1a1a;
-  margin-bottom: 1.5rem;
-  font-size: 1.25rem;
-  font-weight: 600;
-  padding-bottom: 0.75rem;
-  border-bottom: 1px solid #e0e0e0;
+  padding: 2rem;
+  overflow-y: auto;
+  flex: 1;
 }
 
 .form-group {
@@ -82,12 +135,26 @@
 }
 
 @media (max-width: 768px) {
-  .payment-form {
+  .payment-form-overlay {
+    padding: 0;
+  }
+
+  .payment-form-container {
+    max-width: 100%;
+    max-height: 100vh;
+    border-radius: 0;
+  }
+
+  .payment-form-header {
     padding: 1rem;
   }
 
-  .payment-form h2 {
-    font-size: 1.125rem;
+  .payment-form-header h2 {
+    font-size: 1.25rem;
+  }
+
+  .payment-form {
+    padding: 1.5rem 1rem;
   }
 
   .form-group {

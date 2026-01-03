@@ -85,7 +85,6 @@ function PaymentForm({ onSubmit, onCancel, uniqueBeneficiaries = [], uniqueAccou
     const newErrors = {}
     
     if (!formData.date) newErrors.date = 'تاريخ مطلوب'
-    if (!formData.beneficiary.trim()) newErrors.beneficiary = 'المستفيد مطلوب'
     if (!formData.account.trim()) newErrors.account = 'الحساب مطلوب'
     if (!formData.project.trim()) newErrors.project = 'المشروع مطلوب'
     const numericTotal = parseFloat(formData.total.replace(/,/g, ''))
@@ -129,9 +128,20 @@ function PaymentForm({ onSubmit, onCancel, uniqueBeneficiaries = [], uniqueAccou
   const isEditing = !!initialData
 
   return (
-    <div className="payment-form-container">
-      <form className="payment-form" onSubmit={handleSubmit}>
-        <h2>{isEditing ? 'تعديل دفعة' : 'إضافة دفعة جديدة'}</h2>
+    <div className="payment-form-overlay" onClick={onCancel}>
+      <div className="payment-form-container" onClick={(e) => e.stopPropagation()}>
+        <div className="payment-form-header">
+          <h2>{isEditing ? 'تعديل دفعة' : 'إضافة دفعة جديدة'}</h2>
+          <button 
+            type="button" 
+            className="close-button"
+            onClick={onCancel}
+            aria-label="إغلاق"
+          >
+            ×
+          </button>
+        </div>
+        <form className="payment-form" onSubmit={handleSubmit}>
         
         <div className="form-group">
           <label htmlFor="date">تاريخ *</label>
@@ -147,7 +157,7 @@ function PaymentForm({ onSubmit, onCancel, uniqueBeneficiaries = [], uniqueAccou
         </div>
 
         <div className="form-group">
-          <label htmlFor="beneficiary">المستفيد *</label>
+          <label htmlFor="beneficiary">المستفيد</label>
           <Autocomplete
             id="beneficiary"
             name="beneficiary"
@@ -228,7 +238,8 @@ function PaymentForm({ onSubmit, onCancel, uniqueBeneficiaries = [], uniqueAccou
             {isEditing ? 'تحديث' : 'حفظ'}
           </button>
         </div>
-      </form>
+        </form>
+      </div>
     </div>
   )
 }

@@ -24,6 +24,12 @@
   letter-spacing: -0.02em;
 }
 
+.header-buttons {
+  display: flex;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+}
+
 .btn {
   padding: 0.625rem 1.25rem;
   border: 1px solid #d0d0d0;
@@ -122,6 +128,17 @@
 .btn-clear:hover {
   background: #616161;
   border-color: #424242;
+}
+
+.btn-export {
+  background: #217346;
+  color: white;
+  border-color: #1e6b3f;
+}
+
+.btn-export:hover {
+  background: #1e6b3f;
+  border-color: #1a5a35;
 }
 
 .btn-secondary {

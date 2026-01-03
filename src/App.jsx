@@ -2,12 +2,14 @@ import { useState, useEffect } from 'react'
 import { supabase } from './supabase/client'
 import PaymentForm from './components/PaymentForm'
 import PaymentList from './components/PaymentList'
+import ExcelImporter from './components/ExcelImporter'
 import './App.css'
 
 function App() {
   const [payments, setPayments] = useState([])
   const [loading, setLoading] = useState(true)
   const [showForm, setShowForm] = useState(false)
+  const [showImport, setShowImport] = useState(false)
   const [editingPayment, setEditingPayment] = useState(null)
   const [filters, setFilters] = useState({
     dateFrom: '',
@@ -98,6 +100,48 @@ function App() {
     setEditingPayment(null)
   }
 
+  const handleImportExcel = async (importedData) => {
+    try {
+      console.log(`Starting import of ${importedData.length} records`)
+      
+      // Insert all records in batches
+      const batchSize = 100
+      let inserted = 0
+      let errors = []
+
+      for (let i = 0; i < importedData.length; i += batchSize) {
+        const batch = importedData.slice(i, i + batchSize)
+        console.log(`Importing batch ${Math.floor(i / batchSize) + 1}, records ${i + 1} to ${Math.min(i + batchSize, importedData.length)}`)
+        
+        const { data, error } = await supabase
+          .from('payments')
+          .insert(batch)
+          .select()
+
+        if (error) {
+          console.error('Error importing batch:', error)
+          console.error('Batch data:', batch)
+          errors.push(`الدفعة ${Math.floor(i / batchSize) + 1}: ${error.message}`)
+        } else {
+          inserted += data?.length || 0
+          console.log(`Successfully inserted ${data?.length || 0} records in batch ${Math.floor(i / batchSize) + 1}`)
+        }
+      }
+
+      if (errors.length > 0) {
+        alert(`تم استيراد ${inserted} من ${importedData.length} سجل بنجاح.\n\nحدثت أخطاء في ${errors.length} دفعة:\n${errors.join('\n')}`)
+      } else {
+        alert(`تم استيراد ${inserted} سجل بنجاح`)
+      }
+
+      setShowImport(false)
+      fetchPayments()
+    } catch (error) {
+      console.error('Error importing data:', error)
+      alert(`حدث خطأ في استيراد البيانات: ${error.message}`)
+    }
+  }
+
   const handleDeletePayment = async (id) => {
     if (!confirm('هل أنت متأكد من حذف هذا السجل؟')) return
 
@@ -140,20 +184,28 @@ function App() {
   return (
     <div className="app">
       <header className="app-header">
-        <h1>Payment Tracking</h1>
-        <button 
-          className="btn btn-primary"
-          onClick={() => {
-            if (showForm) {
-              handleCancelForm()
-            } else {
-              setShowForm(true)
-              setEditingPayment(null)
-            }
-          }}
-        >
-          {showForm ? 'cancel' : 'Add new record'}
-        </button>
+        <h1>تطبيق تسجيل المدفوعات</h1>
+        <div className="header-buttons">
+          <button 
+            className="btn btn-secondary"
+            onClick={() => setShowImport(true)}
+          >
+            استيراد من Excel
+          </button>
+          <button 
+            className="btn btn-primary"
+            onClick={() => {
+              if (showForm) {
+                handleCancelForm()
+              } else {
+                setShowForm(true)
+                setEditingPayment(null)
+              }
+            }}
+          >
+            {showForm ? 'إلغاء' : 'إضافة دفعة جديدة'}
+          </button>
+        </div>
       </header>
 
       {showForm && (
@@ -164,6 +216,13 @@ function App() {
           uniqueAccounts={uniqueAccounts}
           uniqueProjects={uniqueProjects}
           initialData={editingPayment}
+        />
+      )}
+
+      {showImport && (
+        <ExcelImporter
+          onImport={handleImportExcel}
+          onCancel={() => setShowImport(false)}
         />
       )}
 

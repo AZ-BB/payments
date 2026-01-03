@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import * as XLSX from 'xlsx'
 import { EditIcon, DeleteIcon } from './Icons'
 import './PaymentList.css'
 
@@ -40,6 +41,61 @@ function PaymentList({ payments, loading, filters, onFiltersChange, onDelete, on
     }).format(amount)
   }
 
+  const exportToExcel = () => {
+    // Prepare data for export with Arabic column headers (reversed order for RTL)
+    const exportData = payments.map(payment => {
+      // Format date back to DD-Mon-YYYY format for Excel
+      const date = new Date(payment.date)
+      const day = date.getDate()
+      const monthNames = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec']
+      const month = monthNames[date.getMonth()]
+      const year = date.getFullYear()
+      const formattedDate = `${day}-${month}-${year}`
+
+      // Return in reversed order (RTL) - last column first
+      return {
+        'الاجمالي': payment.total,
+        'وصف البند': payment.description || '',
+        'المشروع': payment.project,
+        'الحساب': payment.account,
+        'المستفيد': payment.beneficiary || '',
+        'التاريخ الى': formattedDate,
+        'التاريخ من': formattedDate
+      }
+    })
+
+    // Create workbook and worksheet
+    const ws = XLSX.utils.json_to_sheet(exportData)
+    const wb = XLSX.utils.book_new()
+    XLSX.utils.book_append_sheet(wb, ws, 'المدفوعات')
+
+    // Set column widths (reversed order)
+    const colWidths = [
+      { wch: 15 }, // الاجمالي
+      { wch: 40 }, // وصف البند
+      { wch: 15 }, // المشروع
+      { wch: 20 }, // الحساب
+      { wch: 20 }, // المستفيد
+      { wch: 12 }, // التاريخ الى
+      { wch: 12 }  // التاريخ من
+    ]
+    ws['!cols'] = colWidths
+
+    // Set RTL direction for the sheet
+    if (!ws['!views']) ws['!views'] = []
+    ws['!views'][0] = {
+      rightToLeft: true
+    }
+
+    // Generate filename with current date
+    const today = new Date()
+    const dateStr = `${today.getDate()}-${today.getMonth() + 1}-${today.getFullYear()}`
+    const filename = `المدفوعات_${dateStr}.xlsx`
+
+    // Export file
+    XLSX.writeFile(wb, filename)
+  }
+
   // Calculate total of all displayed payments
   const totalAmount = payments.reduce((sum, payment) => sum + (parseFloat(payment.total) || 0), 0)
 
@@ -63,17 +119,24 @@ function PaymentList({ payments, loading, filters, onFiltersChange, onDelete, on
         </div>
         <div className="header-actions">
           <button 
+            className="btn btn-export"
+            onClick={exportToExcel}
+            title="تصدير إلى Excel"
+          >
+            تصدير
+          </button>
+          <button 
             className="btn btn-filter"
             onClick={() => setShowFilters(!showFilters)}
           >
-            {showFilters ? 'Hide' : 'Filter'}
+            {showFilters ? 'إخفاء' : 'تصفية'}
           </button>
           {hasActiveFilters && (
             <button 
               className="btn btn-clear"
               onClick={clearFilters}
             >
-              Clear Filter
+              مسح التصفية
             </button>
           )}
         </div>
@@ -158,7 +221,7 @@ function PaymentList({ payments, loading, filters, onFiltersChange, onDelete, on
               {payments.map(payment => (
                 <tr key={payment.id}>
                   <td className="date-cell">{formatDate(payment.date)}</td>
-                  <td>{payment.beneficiary}</td>
+                  <td>{payment.beneficiary || '—'}</td>
                   <td>{payment.account}</td>
                   <td>{payment.project}</td>
                   <td>{payment.description || '—'}</td>

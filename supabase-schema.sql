@@ -2,7 +2,7 @@
 CREATE TABLE payments (
   id BIGSERIAL PRIMARY KEY,
   date DATE NOT NULL,
-  beneficiary TEXT NOT NULL,
+  beneficiary TEXT,
   account TEXT NOT NULL,
   project TEXT NOT NULL,
   description TEXT,
