@@ -2,14 +2,16 @@ import { useState, useEffect } from 'react'
 import Autocomplete from './Autocomplete'
 import './PaymentForm.css'
 
-function PaymentForm({ onSubmit, onCancel, uniqueBeneficiaries = [], uniqueAccounts = [], uniqueProjects = [], initialData = null }) {
+function IncomeForm({ onSubmit, onCancel, uniqueProjects = [], uniqueUnits = [], uniqueClients = [], uniquePaymentMethods = [], initialData = null }) {
   const [formData, setFormData] = useState({
     date: new Date().toISOString().split('T')[0],
-    beneficiary: '',
-    account: '',
     project: '',
+    unit: '',
+    client: '',
     description: '',
-    total: ''
+    total: '',
+    paymentMethod: '',
+    paymentProof: ''
   })
 
   const formatNumberWithCommas = (value) => {
@@ -35,20 +37,24 @@ function PaymentForm({ onSubmit, onCancel, uniqueBeneficiaries = [], uniqueAccou
     if (initialData) {
       setFormData({
         date: initialData.date,
-        beneficiary: initialData.beneficiary || '',
-        account: initialData.account || '',
         project: initialData.project || '',
+        unit: initialData.unit || '',
+        client: initialData.client || '',
         description: initialData.description || '',
-        total: formatNumberWithCommas(initialData.total)
+        total: formatNumberWithCommas(initialData.total),
+        paymentMethod: initialData.paymentMethod || '',
+        paymentProof: initialData.paymentProof || ''
       })
     } else {
       setFormData({
         date: new Date().toISOString().split('T')[0],
-        beneficiary: '',
-        account: '',
         project: '',
+        unit: '',
+        client: '',
         description: '',
-        total: ''
+        total: '',
+        paymentMethod: '',
+        paymentProof: ''
       })
     }
   }, [initialData])
@@ -85,8 +91,8 @@ function PaymentForm({ onSubmit, onCancel, uniqueBeneficiaries = [], uniqueAccou
     const newErrors = {}
     
     if (!formData.date) newErrors.date = 'تاريخ مطلوب'
-    if (!formData.account.trim()) newErrors.account = 'الحساب مطلوب'
     if (!formData.project.trim()) newErrors.project = 'المشروع مطلوب'
+    if (!formData.client.trim()) newErrors.client = 'العميل مطلوب'
     const numericTotal = parseFloat(formData.total.replace(/,/g, ''))
     if (!formData.total || isNaN(numericTotal) || numericTotal <= 0) {
       newErrors.total = 'الإجمالي يجب أن يكون رقمًا أكبر من الصفر'
@@ -115,11 +121,13 @@ function PaymentForm({ onSubmit, onCancel, uniqueBeneficiaries = [], uniqueAccou
     if (!initialData) {
       setFormData({
         date: new Date().toISOString().split('T')[0],
-        beneficiary: '',
-        account: '',
         project: '',
+        unit: '',
+        client: '',
         description: '',
-        total: ''
+        total: '',
+        paymentMethod: '',
+        paymentProof: ''
       })
       setErrors({})
     }
@@ -131,7 +139,7 @@ function PaymentForm({ onSubmit, onCancel, uniqueBeneficiaries = [], uniqueAccou
     <div className="payment-form-overlay" onClick={onCancel}>
       <div className="payment-form-container" onClick={(e) => e.stopPropagation()}>
         <div className="payment-form-header">
-          <h2>{isEditing ? 'Edit Payment' : 'Add New Payment'}</h2>
+          <h2>{isEditing ? 'تعديل الإيراد' : 'إضافة إيراد جديد'}</h2>
           <button 
             type="button" 
             className="close-button"
@@ -144,7 +152,7 @@ function PaymentForm({ onSubmit, onCancel, uniqueBeneficiaries = [], uniqueAccou
         <form className="payment-form" onSubmit={handleSubmit}>
         
         <div className="form-group">
-          <label htmlFor="date">تاريخ *</label>
+          <label htmlFor="date">التاريخ *</label>
           <input
             type="date"
             id="date"
@@ -154,36 +162,6 @@ function PaymentForm({ onSubmit, onCancel, uniqueBeneficiaries = [], uniqueAccou
             className={errors.date ? 'error' : ''}
           />
           {errors.date && <span className="error-message">{errors.date}</span>}
-        </div>
-
-        <div className="form-group">
-          <label htmlFor="beneficiary">المستفيد</label>
-          <Autocomplete
-            id="beneficiary"
-            name="beneficiary"
-            value={formData.beneficiary}
-            onChange={handleChange}
-            options={uniqueBeneficiaries}
-            placeholder="أدخل اسم المستفيد أو اختر من القائمة"
-            className={errors.beneficiary ? 'error' : ''}
-            error={!!errors.beneficiary}
-          />
-          {errors.beneficiary && <span className="error-message">{errors.beneficiary}</span>}
-        </div>
-
-        <div className="form-group">
-          <label htmlFor="account">الحساب *</label>
-          <Autocomplete
-            id="account"
-            name="account"
-            value={formData.account}
-            onChange={handleChange}
-            options={uniqueAccounts}
-            placeholder="أدخل الحساب أو اختر من القائمة"
-            className={errors.account ? 'error' : ''}
-            error={!!errors.account}
-          />
-          {errors.account && <span className="error-message">{errors.account}</span>}
         </div>
 
         <div className="form-group">
@@ -202,7 +180,37 @@ function PaymentForm({ onSubmit, onCancel, uniqueBeneficiaries = [], uniqueAccou
         </div>
 
         <div className="form-group">
-          <label htmlFor="description">وصف</label>
+          <label htmlFor="unit">الوحدة</label>
+          <Autocomplete
+            id="unit"
+            name="unit"
+            value={formData.unit}
+            onChange={handleChange}
+            options={uniqueUnits}
+            placeholder="أدخل الوحدة أو اختر من القائمة"
+            className={errors.unit ? 'error' : ''}
+            error={!!errors.unit}
+          />
+          {errors.unit && <span className="error-message">{errors.unit}</span>}
+        </div>
+
+        <div className="form-group">
+          <label htmlFor="client">العميل *</label>
+          <Autocomplete
+            id="client"
+            name="client"
+            value={formData.client}
+            onChange={handleChange}
+            options={uniqueClients}
+            placeholder="أدخل العميل أو اختر من القائمة"
+            className={errors.client ? 'error' : ''}
+            error={!!errors.client}
+          />
+          {errors.client && <span className="error-message">{errors.client}</span>}
+        </div>
+
+        <div className="form-group">
+          <label htmlFor="description">الوصف</label>
           <textarea
             id="description"
             name="description"
@@ -216,7 +224,7 @@ function PaymentForm({ onSubmit, onCancel, uniqueBeneficiaries = [], uniqueAccou
         </div>
 
         <div className="form-group">
-          <label htmlFor="total">Total *</label>
+          <label htmlFor="total">الإجمالي *</label>
           <input
             type="text"
             id="total"
@@ -230,12 +238,41 @@ function PaymentForm({ onSubmit, onCancel, uniqueBeneficiaries = [], uniqueAccou
           {errors.total && <span className="error-message">{errors.total}</span>}
         </div>
 
+        <div className="form-group">
+          <label htmlFor="paymentMethod">وسيلة الدفع</label>
+          <Autocomplete
+            id="paymentMethod"
+            name="paymentMethod"
+            value={formData.paymentMethod}
+            onChange={handleChange}
+            options={uniquePaymentMethods}
+            placeholder="أدخل وسيلة الدفع أو اختر من القائمة"
+            className={errors.paymentMethod ? 'error' : ''}
+            error={!!errors.paymentMethod}
+          />
+          {errors.paymentMethod && <span className="error-message">{errors.paymentMethod}</span>}
+        </div>
+
+        <div className="form-group">
+          <label htmlFor="paymentProof">إثبات الدفع (رابط)</label>
+          <input
+            type="url"
+            id="paymentProof"
+            name="paymentProof"
+            value={formData.paymentProof}
+            onChange={handleChange}
+            placeholder="https://example.com/proof"
+            className={errors.paymentProof ? 'error' : ''}
+          />
+          {errors.paymentProof && <span className="error-message">{errors.paymentProof}</span>}
+        </div>
+
         <div className="form-actions">
           <button type="button" className="btn btn-secondary" onClick={onCancel}>
-            Cancel
+            إلغاء
           </button>
           <button type="submit" className="btn btn-primary">
-            {isEditing ? 'Update' : 'Save'}
+            {isEditing ? 'تحديث' : 'حفظ'}
           </button>
         </div>
         </form>
@@ -244,5 +281,5 @@ function PaymentForm({ onSubmit, onCancel, uniqueBeneficiaries = [], uniqueAccou
   )
 }
 
-export default PaymentForm
+export default IncomeForm
 

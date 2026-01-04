@@ -19,3 +19,33 @@ CREATE POLICY "Allow all operations" ON payments
   USING (true)
   WITH CHECK (true);
 
+-- Create incomes table
+CREATE TABLE incomes (
+  id BIGSERIAL PRIMARY KEY,
+  date DATE NOT NULL,
+  project TEXT NOT NULL,
+  unit TEXT,
+  client TEXT NOT NULL,
+  description TEXT,
+  total NUMERIC(10, 2) NOT NULL,
+  payment_method TEXT,
+  payment_proof TEXT,
+  created_at TIMESTAMP WITH TIME ZONE DEFAULT TIMEZONE('utc'::text, NOW()) NOT NULL
+);
+
+-- Enable Row Level Security (optional, for security)
+ALTER TABLE incomes ENABLE ROW LEVEL SECURITY;
+
+-- Create a policy that allows all operations (adjust as needed for your security requirements)
+CREATE POLICY "Allow all operations" ON incomes
+  FOR ALL
+  USING (true)
+  WITH CHECK (true);
+
+-- If the table already exists, use these ALTER TABLE statements to add missing columns:
+-- ALTER TABLE incomes ADD COLUMN IF NOT EXISTS payment_method TEXT;
+-- ALTER TABLE incomes ADD COLUMN IF NOT EXISTS payment_proof TEXT;
+
+-- If the unit column already exists as NOT NULL, make it optional:
+-- ALTER TABLE incomes ALTER COLUMN unit DROP NOT NULL;
+
