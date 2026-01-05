@@ -405,9 +405,11 @@ function Credit() {
 
         {/* Final Result Section */}
         <div className="credit-section">
-          <h2>Final Result</h2>
+          <h2>Check</h2>
           <div className={`final-result ${finalAmount >= 0 ? 'positive' : 'negative'}`}>
-            <div className="final-result-label">Remaining Amount:</div>
+            <div className="final-result-label">{
+              finalAmount >= 0 ? 'فائض' : 'عجز'
+              }</div>
             <div className="final-result-value">{formatNumber(finalAmount)}</div>
           </div>
         </div>
