@@ -149,6 +149,20 @@
   border-top: none;
 }
 
+.payments-table th input[type="checkbox"] {
+  cursor: pointer;
+  width: 18px;
+  height: 18px;
+  accent-color: #217346;
+}
+
+.payments-table td input[type="checkbox"] {
+  cursor: pointer;
+  width: 18px;
+  height: 18px;
+  accent-color: #217346;
+}
+
 .payments-table th:first-child {
   border-right: none;
 }

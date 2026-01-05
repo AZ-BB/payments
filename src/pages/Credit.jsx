@@ -1,8 +1,10 @@
 import { useState, useEffect } from 'react'
 import { supabase } from '../supabase/client'
+import { useAuth } from '../contexts/AuthContext'
 import './Credit.css'
 
 function Credit() {
+  const { user } = useAuth()
   const [incomes, setIncomes] = useState([])
   const [payments, setPayments] = useState([])
   const [creditBoxes, setCreditBoxes] = useState({
@@ -25,13 +27,20 @@ function Credit() {
   const [saving, setSaving] = useState(false)
 
   useEffect(() => {
+    if (!user) return
+    
     fetchData()
     
-    // Subscribe to real-time changes
+    // Subscribe to real-time changes for current user only
     const incomesChannel = supabase
       .channel('credit-incomes-changes')
       .on('postgres_changes', 
-        { event: '*', schema: 'public', table: 'incomes' },
+        { 
+          event: '*', 
+          schema: 'public', 
+          table: 'incomes',
+          filter: `user_id=eq.${user.id}`
+        },
         () => {
           fetchIncomes()
         }
@@ -41,7 +50,12 @@ function Credit() {
     const paymentsChannel = supabase
       .channel('credit-payments-changes')
       .on('postgres_changes', 
-        { event: '*', schema: 'public', table: 'payments' },
+        { 
+          event: '*', 
+          schema: 'public', 
+          table: 'payments',
+          filter: `user_id=eq.${user.id}`
+        },
         () => {
           fetchPayments()
         }
@@ -52,7 +66,7 @@ function Credit() {
       supabase.removeChannel(incomesChannel)
       supabase.removeChannel(paymentsChannel)
     }
-  }, [])
+  }, [user])
 
   const fetchData = async () => {
     await Promise.all([
@@ -64,10 +78,13 @@ function Credit() {
   }
 
   const fetchIncomes = async () => {
+    if (!user) return
+    
     try {
       const { data, error } = await supabase
         .from('incomes')
         .select('total')
+        .eq('user_id', user.id)
 
       if (error) throw error
       setIncomes(data || [])
@@ -77,10 +94,13 @@ function Credit() {
   }
 
   const fetchPayments = async () => {
+    if (!user) return
+    
     try {
       const { data, error } = await supabase
         .from('payments')
         .select('total')
+        .eq('user_id', user.id)
 
       if (error) throw error
       setPayments(data || [])
@@ -90,10 +110,13 @@ function Credit() {
   }
 
   const fetchCreditBoxes = async () => {
+    if (!user) return
+    
     try {
       const { data, error } = await supabase
         .from('credit_boxes')
         .select('*')
+        .eq('user_id', user.id)
 
       if (error) throw error
       
@@ -122,14 +145,16 @@ function Credit() {
   }
 
   const initializeCreditBoxes = async () => {
+    if (!user) return
+    
     try {
       const { error } = await supabase
         .from('credit_boxes')
         .upsert([
-          { box_type: 'كاش', amount: 0 },
-          { box_type: 'بنك', amount: 0 },
-          { box_type: 'عهدة', amount: 0 }
-        ], { onConflict: 'box_type' })
+          { box_type: 'كاش', amount: 0, user_id: user.id },
+          { box_type: 'بنك', amount: 0, user_id: user.id },
+          { box_type: 'عهدة', amount: 0, user_id: user.id }
+        ], { onConflict: 'user_id,box_type' })
 
       if (error) throw error
     } catch (error) {
@@ -241,6 +266,8 @@ function Credit() {
   }
 
   const handleSave = async () => {
+    if (!user) return
+    
     try {
       setSaving(true)
       
@@ -248,12 +275,13 @@ function Credit() {
       const updates = Object.entries(creditBoxes).map(([boxType, amount]) => ({
         box_type: boxType,
         amount: parseFloat(amount) || 0,
+        user_id: user.id,
         updated_at: new Date().toISOString()
       }))
 
       const { error } = await supabase
         .from('credit_boxes')
-        .upsert(updates, { onConflict: 'box_type' })
+        .upsert(updates, { onConflict: 'user_id,box_type' })
 
       if (error) throw error
       

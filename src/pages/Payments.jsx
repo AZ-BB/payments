@@ -1,11 +1,13 @@
 import { useState, useEffect } from 'react'
 import { supabase } from '../supabase/client'
+import { useAuth } from '../contexts/AuthContext'
 import PaymentForm from '../components/PaymentForm'
 import PaymentList from '../components/PaymentList'
 import ExcelImporter from '../components/ExcelImporter'
 import './Payments.css'
 
 function Payments() {
+  const { user } = useAuth()
   const [payments, setPayments] = useState([])
   const [loading, setLoading] = useState(true)
   const [showForm, setShowForm] = useState(false)
@@ -20,13 +22,20 @@ function Payments() {
   })
 
   useEffect(() => {
+    if (!user) return
+    
     fetchPayments()
     
-    // Subscribe to real-time changes
+    // Subscribe to real-time changes for current user only
     const channel = supabase
       .channel('payments-changes')
       .on('postgres_changes', 
-        { event: '*', schema: 'public', table: 'payments' },
+        { 
+          event: '*', 
+          schema: 'public', 
+          table: 'payments',
+          filter: `user_id=eq.${user.id}`
+        },
         () => {
           fetchPayments()
         }
@@ -36,14 +45,17 @@ function Payments() {
     return () => {
       supabase.removeChannel(channel)
     }
-  }, [])
+  }, [user])
 
   const fetchPayments = async () => {
+    if (!user) return
+    
     try {
       setLoading(true)
       const { data, error } = await supabase
         .from('payments')
         .select('*')
+        .eq('user_id', user.id)
         .order('date', { ascending: false })
 
       if (error) throw error
@@ -57,10 +69,12 @@ function Payments() {
   }
 
   const handleAddPayment = async (paymentData) => {
+    if (!user) return
+    
     try {
       const { data, error } = await supabase
         .from('payments')
-        .insert([paymentData])
+        .insert([{ ...paymentData, user_id: user.id }])
         .select()
 
       if (error) throw error
@@ -101,6 +115,8 @@ function Payments() {
   }
 
   const handleImportExcel = async (importedData) => {
+    if (!user) return
+    
     try {
       console.log(`Starting import of ${importedData.length} records`)
       
@@ -110,7 +126,10 @@ function Payments() {
       let errors = []
 
       for (let i = 0; i < importedData.length; i += batchSize) {
-        const batch = importedData.slice(i, i + batchSize)
+        const batch = importedData.slice(i, i + batchSize).map(data => ({
+          ...data,
+          user_id: user.id
+        }))
         console.log(`Importing batch ${Math.floor(i / batchSize) + 1}, records ${i + 1} to ${Math.min(i + batchSize, importedData.length)}`)
         
         const { data, error } = await supabase
@@ -156,6 +175,21 @@ function Payments() {
     } catch (error) {
       console.error('Error deleting payment:', error)
       alert('حدث خطأ في حذف السجل')
+    }
+  }
+
+  const handleDeleteSelectedPayments = async (ids) => {
+    try {
+      const { error } = await supabase
+        .from('payments')
+        .delete()
+        .in('id', ids)
+
+      if (error) throw error
+      fetchPayments()
+    } catch (error) {
+      console.error('Error deleting selected payments:', error)
+      alert('حدث خطأ في حذف السجلات المحددة')
     }
   }
 
@@ -233,6 +267,7 @@ function Payments() {
         filters={filters}
         onFiltersChange={setFilters}
         onDelete={handleDeletePayment}
+        onDeleteSelected={handleDeleteSelectedPayments}
         onEdit={handleStartEdit}
         uniqueBeneficiaries={uniqueBeneficiaries}
         uniqueAccounts={uniqueAccounts}

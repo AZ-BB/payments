@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react'
 import { supabase } from '../supabase/client'
+import { useAuth } from '../contexts/AuthContext'
 import IncomeForm from '../components/IncomeForm'
 import IncomeList from '../components/IncomeList'
 import ExcelImporter from '../components/ExcelImporter'
@@ -7,6 +8,7 @@ import { toDatabaseFormat, fromDatabaseFormatArray } from '../utils/incomeMapper
 import './Income.css'
 
 function Income() {
+  const { user } = useAuth()
   const [incomes, setIncomes] = useState([])
   const [loading, setLoading] = useState(true)
   const [showForm, setShowForm] = useState(false)
@@ -22,13 +24,20 @@ function Income() {
   })
 
   useEffect(() => {
+    if (!user) return
+    
     fetchIncomes()
     
-    // Subscribe to real-time changes
+    // Subscribe to real-time changes for current user only
     const channel = supabase
       .channel('incomes-changes')
       .on('postgres_changes', 
-        { event: '*', schema: 'public', table: 'incomes' },
+        { 
+          event: '*', 
+          schema: 'public', 
+          table: 'incomes',
+          filter: `user_id=eq.${user.id}`
+        },
         () => {
           fetchIncomes()
         }
@@ -38,14 +47,17 @@ function Income() {
     return () => {
       supabase.removeChannel(channel)
     }
-  }, [])
+  }, [user])
 
   const fetchIncomes = async () => {
+    if (!user) return
+    
     try {
       setLoading(true)
       const { data, error } = await supabase
         .from('incomes')
         .select('*')
+        .eq('user_id', user.id)
         .order('date', { ascending: false })
 
       if (error) throw error
@@ -59,8 +71,10 @@ function Income() {
   }
 
   const handleAddIncome = async (incomeData) => {
+    if (!user) return
+    
     try {
-      const dbData = toDatabaseFormat(incomeData)
+      const dbData = { ...toDatabaseFormat(incomeData), user_id: user.id }
       const { data, error } = await supabase
         .from('incomes')
         .insert([dbData])
@@ -105,6 +119,8 @@ function Income() {
   }
 
   const handleImportExcel = async (importedData) => {
+    if (!user) return
+    
     try {
       console.log(`Starting import of ${importedData.length} records`)
       
@@ -114,7 +130,10 @@ function Income() {
       let errors = []
 
       for (let i = 0; i < importedData.length; i += batchSize) {
-        const batch = importedData.slice(i, i + batchSize).map(toDatabaseFormat)
+        const batch = importedData.slice(i, i + batchSize).map(data => ({
+          ...toDatabaseFormat(data),
+          user_id: user.id
+        }))
         console.log(`Importing batch ${Math.floor(i / batchSize) + 1}, records ${i + 1} to ${Math.min(i + batchSize, importedData.length)}`)
         
         const { data, error } = await supabase
@@ -160,6 +179,21 @@ function Income() {
     } catch (error) {
       console.error('Error deleting income:', error)
       alert('حدث خطأ في حذف السجل')
+    }
+  }
+
+  const handleDeleteSelectedIncomes = async (ids) => {
+    try {
+      const { error } = await supabase
+        .from('incomes')
+        .delete()
+        .in('id', ids)
+
+      if (error) throw error
+      fetchIncomes()
+    } catch (error) {
+      console.error('Error deleting selected incomes:', error)
+      alert('حدث خطأ في حذف السجلات المحددة')
     }
   }
 
@@ -241,6 +275,7 @@ function Income() {
         filters={filters}
         onFiltersChange={setFilters}
         onDelete={handleDeleteIncome}
+        onDeleteSelected={handleDeleteSelectedIncomes}
         onEdit={handleStartEdit}
         uniqueProjects={uniqueProjects}
         uniqueUnits={uniqueUnits}

@@ -1,16 +1,20 @@
-import { useState } from 'react'
+import { useState, useRef, useEffect } from 'react'
 import * as XLSX from 'xlsx'
 import { EditIcon, DeleteIcon } from './Icons'
 import './PaymentList.css'
 
-function PaymentList({ payments, loading, filters, onFiltersChange, onDelete, onEdit, uniqueBeneficiaries = [], uniqueAccounts = [], uniqueProjects = [] }) {
+function PaymentList({ payments, loading, filters, onFiltersChange, onDelete, onEdit, onDeleteSelected, uniqueBeneficiaries = [], uniqueAccounts = [], uniqueProjects = [] }) {
   const [showFilters, setShowFilters] = useState(false)
+  const [selectedIds, setSelectedIds] = useState(new Set())
+  const selectAllCheckboxRef = useRef(null)
 
   const handleFilterChange = (name, value) => {
     onFiltersChange(prev => ({
       ...prev,
       [name]: value
     }))
+    // Clear selections when filters change
+    setSelectedIds(new Set())
   }
 
   const clearFilters = () => {
@@ -21,6 +25,8 @@ function PaymentList({ payments, loading, filters, onFiltersChange, onDelete, on
       account: '',
       project: ''
     })
+    // Clear selections when filters are cleared
+    setSelectedIds(new Set())
   }
 
   const hasActiveFilters = Object.values(filters).some(val => val !== '')
@@ -99,6 +105,42 @@ function PaymentList({ payments, loading, filters, onFiltersChange, onDelete, on
   // Calculate total of all displayed payments
   const totalAmount = payments.reduce((sum, payment) => sum + (parseFloat(payment.total) || 0), 0)
 
+  // Selection handlers
+  const handleSelectAll = (e) => {
+    if (e.target.checked) {
+      setSelectedIds(new Set(payments.map(payment => payment.id)))
+    } else {
+      setSelectedIds(new Set())
+    }
+  }
+
+  const handleSelectOne = (id, checked) => {
+    const newSelected = new Set(selectedIds)
+    if (checked) {
+      newSelected.add(id)
+    } else {
+      newSelected.delete(id)
+    }
+    setSelectedIds(newSelected)
+  }
+
+  const handleDeleteSelected = () => {
+    if (selectedIds.size === 0) return
+    if (!confirm(`هل أنت متأكد من حذف ${selectedIds.size} سجل محدد؟`)) return
+    
+    onDeleteSelected(Array.from(selectedIds))
+    setSelectedIds(new Set())
+  }
+
+  const isAllSelected = payments.length > 0 && selectedIds.size === payments.length
+  const isIndeterminate = selectedIds.size > 0 && selectedIds.size < payments.length
+
+  useEffect(() => {
+    if (selectAllCheckboxRef.current) {
+      selectAllCheckboxRef.current.indeterminate = isIndeterminate
+    }
+  }, [isIndeterminate])
+
   if (loading) {
     return (
       <div className="payment-list-container">
@@ -118,6 +160,15 @@ function PaymentList({ payments, loading, filters, onFiltersChange, onDelete, on
           </div>
         </div>
         <div className="header-actions">
+          {selectedIds.size > 0 && (
+            <button 
+              className="btn btn-danger"
+              onClick={handleDeleteSelected}
+              title="Delete Selected"
+            >
+              Delete Selected ({selectedIds.size})
+            </button>
+          )}
           <button 
             className="btn btn-export"
             onClick={exportToExcel}
@@ -208,6 +259,15 @@ function PaymentList({ payments, loading, filters, onFiltersChange, onDelete, on
           <table className="payments-table">
             <thead>
               <tr>
+                <th style={{ width: '50px' }}>
+                  <input
+                    type="checkbox"
+                    ref={selectAllCheckboxRef}
+                    checked={isAllSelected}
+                    onChange={handleSelectAll}
+                    title="Select All"
+                  />
+                </th>
                 <th>تاريخ</th>
                 <th>المستفيد</th>
                 <th>الحساب</th>
@@ -220,6 +280,13 @@ function PaymentList({ payments, loading, filters, onFiltersChange, onDelete, on
             <tbody>
               {payments.map(payment => (
                 <tr key={payment.id}>
+                  <td>
+                    <input
+                      type="checkbox"
+                      checked={selectedIds.has(payment.id)}
+                      onChange={(e) => handleSelectOne(payment.id, e.target.checked)}
+                    />
+                  </td>
                   <td className="date-cell">{formatDate(payment.date)}</td>
                   <td>{payment.beneficiary || '—'}</td>
                   <td>{payment.account}</td>
